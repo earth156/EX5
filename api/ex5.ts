@@ -123,11 +123,19 @@ router.get("/searchMovie", (req, res) => {
         SELECT m.movie_id, m.movie_name, m.poster, m.date, m.plot, m.genre,
                s.star_id,
                c.creator_id,
-               p.person_id, p.name, p.birthday, p.person_type
+               ps.person_id AS star_person_id,
+               ps.name AS star_name,
+               ps.birthday AS star_birthday,
+               ps.person_type AS star_person_type,
+               pc.person_id AS creator_person_id,
+               pc.name AS creator_name,
+               pc.birthday AS creator_birthday,
+               pc.person_type AS creator_person_type
         FROM movies m
         LEFT JOIN stars s ON m.movie_id = s.movie_id
         LEFT JOIN creators c ON m.movie_id = c.movie_id
-        LEFT JOIN person p ON (s.star_id = p.person_id OR c.creator_id = p.person_id)
+        LEFT JOIN person ps ON s.person_id = ps.person_id
+        LEFT JOIN person pc ON c.person_id = pc.person_id
         WHERE m.movie_name LIKE ?
     `;
     conn.query(sqlQuery, [`%${searchQuery}%`], (err, result, fields) => {
@@ -140,48 +148,4 @@ router.get("/searchMovie", (req, res) => {
     });
 });
 
-// router.get("/searchMovie", (req, res) => {
-//     const searchQuery = req.query.search;
-//     const sqlQuery = `
-//         SELECT 
-//             movie.movie_id, 
-//             movie.movie_name, 
-//             movie.date, 
-//             movie.poster,
-//             movie.genre
-//             GROUP_CONCAT(
-//                 DISTINCT CONCAT('Star_ID',':',person_star.pid,'->', person_star.name) 
-//                 SEPARATOR ', ' 
-//             ) AS stars,
-//             GROUP_CONCAT(
-//                 DISTINCT CONCAT('Creator_ID',':',person_creator.pid, '->', person_creator.name) 
-//                 SEPARATOR ', '
-//             ) AS creators
-//         FROM 
-//             movie
-//         LEFT JOIN 
-//             stars ON movie.mid = stars.midS
-//         LEFT JOIN 
-//             person AS person_star ON stars.pidS = person_star.pid
-//         LEFT JOIN 
-//             creators ON movie.mid = creators.midC
-//         LEFT JOIN 
-//             person AS person_creator ON creators.pidC = person_creator.pid
-//         WHERE 
-//             movie.name LIKE ?
-//         GROUP BY 
-//             movie.mid, 
-//             movie.name, 
-//             movie.year, 
-//             movie.detail, 
-//             movie.poster
-//     `;
-//     conn.query(sqlQuery, [`%${searchQuery}%`], (err, result, fields) => {
-//         if (err) {
-//             console.error("Error searching for movies:", err);
-//             res.status(500).json({ error: "Internal Server Error" });
-//         } else {
-//             res.json(result);
-//         }
-//     });
-// });
+
